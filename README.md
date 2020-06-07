@@ -14,6 +14,7 @@ Or from Steam here: https://store.steampowered.com/app/326160/ <br />
 <b>Purpose</b>:
 Placemarker allows players to save locations of interest and get the distance to a chosen saved location.
 <br />
+<br />
 <b>Installation</b>:
 Place the required files and folders into this folder:
 [Your Game's Datapath]\Portalarium\Shroud of the Avatar\Lua
