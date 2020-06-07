@@ -21,9 +21,9 @@ For example-
 C:\Users\Rafael\AppData\Roaming\Portalarium\Shroud of the Avatar\Lua
 
 <h3> In-game setup </h3>
-* Open the game's chat console.
-* Create a new tab, or select an existing tab.
-* Click the gear icon and ensure `Lua` is checkmarked.
+* Open the game's chat console.<br />
+* Create a new tab, or select an existing tab.<br />
+* Click the gear icon and ensure `Lua` is checkmarked.<br />
 
 Placemarker's functions can be run by clicking on the buttons, but there are some commands that must be issued through the console.
 
