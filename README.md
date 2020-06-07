@@ -16,7 +16,7 @@ Placemarker allows players to save locations of interest and get the distance to
 <br />
 <br />
 <h3>Installation</h3>
-Place the required files and folders into this folder<br />
+Place the contents of the download folder in this repo into your game's Lua folder<br />
 <br />
 [Your Game's Datapath]\Portalarium\Shroud of the Avatar\Lua
 <br />
