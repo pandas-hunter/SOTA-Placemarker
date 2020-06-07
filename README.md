@@ -20,20 +20,10 @@ Place the required files and folders into this folder:
 For example-
 C:\Users\Rafael\AppData\Roaming\Portalarium\Shroud of the Avatar\Lua
 
-#### Required files
-#### placemarker.lua [script file]
-#### Placemarker [folder]
-####   assets [folder]
-####     - bg.png
-####     - border.png
-####     - button.png
-####     - transparent_1x1.png
-#### data [empty folder]
-
-<b>In-game setup</b>:
-Open the game's chat console.
-Create a new tab, or select an existing tab.
-Click the gear icon and ensure `Lua` is checkmarked.
+<h3> In-game setup
+* Open the game's chat console.
+* Create a new tab, or select an existing tab.
+* Click the gear icon and ensure `Lua` is checkmarked.
 
 Placemarker's functions can be run by clicking on the buttons, but there are some commands that must be issued through the console.
 
