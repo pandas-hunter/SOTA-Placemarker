@@ -20,15 +20,15 @@ Place the required files and folders into this folder:
 For example-
 C:\Users\Rafael\AppData\Roaming\Portalarium\Shroud of the Avatar\Lua
 
-<h4>Required files</h4>
-placemarker.lua [script file]
-Placemarker [folder]
-    assets [folder]
-        - bg.png
-        - border.png
-        - button.png
-        - transparent_1x1.png
-    data [empty folder]
+#### Required files
+#### placemarker.lua [script file]
+#### Placemarker [folder]
+####   assets [folder]
+####     - bg.png
+####     - border.png
+####     - button.png
+####     - transparent_1x1.png
+#### data [empty folder]
 
 <b>In-game setup</b>:
 Open the game's chat console.
