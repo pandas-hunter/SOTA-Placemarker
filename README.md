@@ -38,7 +38,6 @@ Placemarker's functions can be run by clicking on the buttons, but there are som
 Typed commands must be typed into the Local chat channel. Keep in mind, local chats are visible to other players and saved in the logs.
 
 <b>Type commands in local chat</b>
-- - -
 Type: <!pmhelp> for list of commands
 Type: <!pmsave> saves placemarks on your screen to a file
 Type: <!pmload> loads placemarks from file
@@ -47,7 +46,6 @@ Type: </lua unload> to remove the addon
 Type: </lua reload> to reload the addon; and resets it
   
 <b>Button functions</b>
-- - -
 [Mark] button to record without label
 [X] to delete row from on-screen table
 [T] to track distance to that placemark
