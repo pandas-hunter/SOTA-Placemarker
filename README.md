@@ -20,7 +20,7 @@ Place the required files and folders into this folder:
 For example-
 C:\Users\Rafael\AppData\Roaming\Portalarium\Shroud of the Avatar\Lua
 
-<h3> In-game setup
+<h3> In-game setup </h3>
 * Open the game's chat console.
 * Create a new tab, or select an existing tab.
 * Click the gear icon and ensure `Lua` is checkmarked.
