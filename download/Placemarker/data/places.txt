@@ -1,0 +1,4 @@
+<D>06-07-2020|13:26:17</D> <SCENE>Lost Vale</SCENE> <LABEL>NA</LABEL> <X>132.5</X> <Y>-2.9</Y> <Z>139.3</Z> <C>#ffffff</C>
+<D>06-07-2020|13:26:53</D> <SCENE>Lost Vale</SCENE> <LABEL>NA</LABEL> <X>132.5</X> <Y>-2.9</Y> <Z>139.3</Z> <C>#ffffff</C>
+<D>06-07-2020|13:26:53</D> <SCENE>Lost Vale</SCENE> <LABEL>NA</LABEL> <X>132.5</X> <Y>-2.9</Y> <Z>139.3</Z> <C>#ffffff</C>
+<D>06-07-2020|13:26:53</D> <SCENE>Lost Vale</SCENE> <LABEL>NA</LABEL> <X>132.5</X> <Y>-2.9</Y> <Z>139.3</Z> <C>#ffffff</C>
