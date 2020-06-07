@@ -2,7 +2,7 @@
 ### Written by Rafael
 
 ![Screenshot](placemarker_screenshot.png)
-<b>Description</b>
+<h3>Description</h3>
 A placemarker add-on for Shroud of the Avatar game.
 
 <b>Note</b>: this script works only in the Shroud of the Avatar (SOTA) game.
