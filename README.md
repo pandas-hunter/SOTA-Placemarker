@@ -20,6 +20,7 @@ Place the required files and folders into this folder<br />
 <br />
 [Your Game's Datapath]\Portalarium\Shroud of the Avatar\Lua
 <br />
+<br />
 For example<br />
 <br />
 C:\Users\Rafael\AppData\Roaming\Portalarium\Shroud of the Avatar\Lua
