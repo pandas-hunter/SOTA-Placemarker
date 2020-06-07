@@ -7,6 +7,7 @@ A placemarker add-on for Shroud of the Avatar game.
 <br />
 <b>This script works only in the Shroud of the Avatar (SOTA) game.</b>
 <br />
+<br />
 Download SOTA here: https://www.shroudoftheavatar.com/ <br />
 Or from Steam here: https://store.steampowered.com/app/326160/ <br />
 <br />
