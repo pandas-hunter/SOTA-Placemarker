@@ -38,21 +38,21 @@ Placemarker's functions can be run by clicking on the buttons, but there are som
 Typed commands must be typed into the Local chat channel. Keep in mind, local chats are visible to other players and saved in the logs.
 
 <b>Type commands in local chat</b>
-<!pmhelp> for list of commands
-<!pmsave> saves placemarks on your screen to a file
-<!pmload> loads placemarks from file
-<!mark some label> to manually enter a labelled placemark
-</lua unload> to remove the addon
-</lua reload> to reload the addon; and resets it
+"!pmhelp": for list of commands
+"!pmsave": saves placemarks on your screen to a file
+"!pmload": loads placemarks from file
+"!mark some label": to manually enter a labelled placemark
+"/lua unload": to remove the addon
+"/lua reload": to reload the addon; and resets it
   
 <b>Button functions</b>
-[Mark] button to record without label
-[X] to delete row from on-screen table
-[T] to track distance to that placemark
-[&] to append a single row to the data file
-[Clear] to clear on-screen data table. Will not affect saved file
-[Vis] toggle visibility of on-screen data table
-[Save] to overwrite and save data file with on-screen data. Be careful
-[Load] to clear on-screen data table and load places from file. Be careful
-[Size -] decreases the size of all text and GUI elements
-[Size +] increases the size of all text and GUI elements
+"Mark": record without label
+"X": delete row from on-screen table
+"T": track distance to that placemark
+"&": append a single row to the data file
+"Clear": clear on-screen data table. Will not affect saved file
+"Vis": toggle visibility of on-screen data table
+"Save": overwrite and save data file with on-screen data. Be careful
+"Load": clear on-screen data table and load places from file. Be careful
+"Size -": decreases the size of all text and GUI elements
+"Size +": increases the size of all text and GUI elements
