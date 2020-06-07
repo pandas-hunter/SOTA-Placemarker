@@ -32,15 +32,15 @@ C:\Users\Rafael\AppData\Roaming\Portalarium\Shroud of the Avatar\Lua
 <br />
 Placemarker's functions can be run by clicking on the buttons, but there are some commands that must be issued through the console.<br />
 <br />
-Typed commands must be typed into the Local chat channel. Keep in mind, local chats are visible to other players and saved in the logs.<br />
+Typed commands must be entered into the Local chat channel. Keep in mind, local chats are visible to other players and saved in the logs.<br />
 <br />
 <h3>Type commands in local chat</h3>
 "!pmhelp": for list of commands<br />
 "!pmsave": saves placemarks on your screen to a file<br />
 "!pmload": loads placemarks from file<br />
 "!mark some label": to manually enter a labelled placemark<br />
-"/lua unload": to remove the addon<br />
-"/lua reload": to reload the addon; and resets it<br />
+"/lua unload": removes all addons<br />
+"/lua reload": reloads addons<br />
 <br />
 <h3>Button functions</h3>
 "Mark": record without label<br />
