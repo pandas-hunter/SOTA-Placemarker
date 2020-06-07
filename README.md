@@ -1,5 +1,7 @@
 # SOTA-Placemarker
 ### Written by Rafael
+
+![Screenshot](placemarker_screenshot.png)
 <b>Description</b>
 A placemarker add-on for Shroud of the Avatar game.
 
