@@ -20,7 +20,7 @@ Place the required files and folders into this folder:
 For example-
 C:\Users\Rafael\AppData\Roaming\Portalarium\Shroud of the Avatar\Lua
 
-<b>Required files</b>:
+<h4>Required files</h4>
 placemarker.lua [script file]
 Placemarker [folder]
     assets [folder]
