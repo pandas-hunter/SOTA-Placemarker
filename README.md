@@ -25,6 +25,7 @@ For example<br />
 <br />
 C:\Users\Rafael\AppData\Roaming\Portalarium\Shroud of the Avatar\Lua
 <br />
+![Screenshot](lua folder.png)
 <h3> In-game setup </h3>
 1. Open the game's chat console.<br />
 2. Create a new tab, or select an existing tab.<br />
