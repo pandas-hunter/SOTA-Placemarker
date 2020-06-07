@@ -11,15 +11,17 @@ A placemarker add-on for Shroud of the Avatar game.
 Download SOTA here: https://www.shroudoftheavatar.com/ <br />
 Or from Steam here: https://store.steampowered.com/app/326160/ <br />
 <br />
-<b>Purpose</b>:
+<h3>Purpose</h3>
 Placemarker allows players to save locations of interest and get the distance to a chosen saved location.
 <br />
 <br />
-<b>Installation</b>:
-Place the required files and folders into this folder:
+<h3>Installation</h3>
+Place the required files and folders into this folder<br />
+<br />
 [Your Game's Datapath]\Portalarium\Shroud of the Avatar\Lua
 <br />
-For example-<br />
+For example<br />
+<br />
 C:\Users\Rafael\AppData\Roaming\Portalarium\Shroud of the Avatar\Lua
 <br />
 <h3> In-game setup </h3>
