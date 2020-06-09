@@ -3,9 +3,10 @@
 
 ![Screenshot](placemarker_screenshot.png)
 <h3>Description</h3>
-A placemarker add-on for Shroud of the Avatar game.
+A placemarker add-on for the game, "Shroud of the Avatar" (SOTA).
 <br />
-<b>This script works only in the Shroud of the Avatar (SOTA) game.</b>
+<br />
+<b>This script works only in SOTA.</b>
 <br />
 <br />
 Download SOTA here: https://www.shroudoftheavatar.com/ <br />
