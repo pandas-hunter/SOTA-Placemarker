@@ -5,6 +5,7 @@
 <h3>Description</h3>
 A placemarker add-on for the game, "Shroud of the Avatar" (SOTA).
 <br />
+<br />
 <b>This script works only in SOTA.</b>
 <br />
 <br />
