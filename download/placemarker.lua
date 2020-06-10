@@ -126,6 +126,7 @@ function DrawMenu() -- Called on the GUI. Be careful what you process here.
      then
         TableFontSize = TableFontSize + 1
         Pad = TableFontSize * 2.5
+        SetAssets()
     end
 
     -- Size -: Decrease the size of everything, linearly.
@@ -142,6 +143,7 @@ function DrawMenu() -- Called on the GUI. Be careful what you process here.
      then
         TableFontSize = TableFontSize - 1
         Pad = TableFontSize * 2
+        SetAssets()
     end
 
     -- Toggle visibility of the Data Table, controlled by the DrawTable()
