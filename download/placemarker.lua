@@ -7,7 +7,6 @@
 	are maintained on the SOTA server, and are not visible in a local IDE.
 ]] --
 function ShroudOnStart()
-    SetAssets()
     VERSION = "1.0"
     OPS = "Win10"
     LUA = "Lua 5.1.5"
@@ -16,16 +15,21 @@ function ShroudOnStart()
     MYPOITABLE = {}
     ROWTABLE = {}
     TRACK = {}
-    SCREEN_H = 0
-    SCREEN_W = 0
+    SCREEN_H = nil
+    SCREEN_W = nil
+    
+    BUTTON_HEIGHT = 100
+    BUTTON_HEIGHT = 100
     Color = "ffffff"
     X = 0
     Y = 0
     TableFontSize = 20
     Pad = 40
-    TableOn = 1 -- Toggle table visibility, 1/0
+    TableOn = 1 -- Toggles table visibility, 1/0
     Viscolor = "#008000"
-
+    Dist = nil
+    
+    SetAssets()
     ShroudConsoleLog(" ")
     ShroudConsoleLog(string.format("- - -"))
     ShroudConsoleLog(string.format("Placemarker Addon"))
@@ -38,7 +42,6 @@ function ShroudOnStart()
     ShroudConsoleLog(string.format("Greetings, %s", CHARACTER))
     ShroudConsoleLog(" ")
     ShroudConsoleLog(string.format("Type in local: <!pmhelp> for list of commands"))
-    ShroudConsoleLog(" ")
 end
 
 function ShroudOnConsoleInput(channel, source, message)
@@ -55,6 +58,9 @@ function ShroudOnConsoleInput(channel, source, message)
         if string.match(message, "!pmload") then
             LoadSavedLocations()
         end
+        if string.match(message, "!pmrestore") then
+            LoadSavedLocations(true)
+        end
         if string.match(message, "!pmhelp") then
             Help()
         end
@@ -62,20 +68,40 @@ function ShroudOnConsoleInput(channel, source, message)
 end
 
 function ShroudOnUpdate()
+
+    if #TRACK > 0 then
+        if TRACK[1][2] == ShroudGetCurrentSceneName() then
+            Dist = Distance()
+            Dist_Error = false
+        else
+            -- user selected a track which was not in the scene
+            Dist = nil
+            Dist_Error = true
+        end
+    else
+        Dist = nil
+    end
 end
 
 function ShroudOnGUI()
-    SCREEN_W = ShroudGetScreenX()
-    SCREEN_H = ShroudGetScreenY()
-    local butt_width = TableFontSize * 5
-    local butt_height = TableFontSize * 5
+    DrawMenu()
     DrawTable()
+end
+
+function DrawMenu() -- Called on the GUI. Be careful what you process here.
+
+    if SCREEN_H == nil  or SCREEN_W == nil then
+        SetAssets()
+        --ShroudConsoleLog("read screen size on GUI")
+    end
+
+-- Mark Button: Records location at time of click,  but with no label
     if
         ShroudButton(
-            SCREEN_W - (butt_width),
-            SCREEN_H - (butt_height),
-            butt_width,
-            butt_height,
+            SCREEN_W - (BUTTON_WIDTH),
+            SCREEN_H - (BUTTON_HEIGHT),
+            BUTTON_WIDTH,
+            BUTTON_HEIGHT,
             TransTexture,
             string.format("<size=%d>Mark</size>", TableFontSize),
             "Mark"
@@ -86,12 +112,13 @@ function ShroudOnGUI()
         PrintConsole(newLocation)
     end
 
+    -- Size +: Increase the size of everything, it scales linearly, and not so elegant.
     if
         ShroudButton(
-            SCREEN_W - (butt_width * 2),
-            SCREEN_H - (butt_height),
-            butt_width,
-            butt_height,
+            SCREEN_W - (BUTTON_WIDTH * 2),
+            SCREEN_H - (BUTTON_HEIGHT),
+            BUTTON_WIDTH,
+            BUTTON_HEIGHT,
             TransTexture,
             string.format("<size=%d>Size +</size>", TableFontSize),
             "Increase"
@@ -101,12 +128,13 @@ function ShroudOnGUI()
         Pad = TableFontSize * 2.5
     end
 
+    -- Size -: Decrease the size of everything, linearly.
     if
         ShroudButton(
-            SCREEN_W - (butt_width * 3),
-            SCREEN_H - (butt_height),
-            butt_width,
-            butt_height,
+            SCREEN_W - (BUTTON_WIDTH * 3),
+            SCREEN_H - (BUTTON_HEIGHT),
+            BUTTON_WIDTH,
+            BUTTON_HEIGHT,
             TransTexture,
             string.format("<size=%d>Size -</size>", TableFontSize),
             "Decrease"
@@ -116,18 +144,19 @@ function ShroudOnGUI()
         Pad = TableFontSize * 2
     end
 
+    -- Toggle visibility of the Data Table, controlled by the DrawTable()
     if
         ShroudButton(
-            SCREEN_W - (butt_width * 4),
-            SCREEN_H - (butt_height),
-            butt_width,
-            butt_height,
+            SCREEN_W - (BUTTON_WIDTH * 4),
+            SCREEN_H - (BUTTON_HEIGHT),
+            BUTTON_WIDTH,
+            BUTTON_HEIGHT,
             TransTexture,
             string.format("<size=%d><color=%s>Vis</color></size>", TableFontSize, Viscolor),
             "Show/Hide Table"
         ) == true
      then
-        -- Toggle Visibility of Table
+        -- Toggle
         TableOn = math.abs(TableOn - 1)
 
         if TableOn == 1 then
@@ -136,12 +165,14 @@ function ShroudOnGUI()
             Viscolor = "#b80c2e"
         end
     end
+
+    -- Save the onscreen table to places.txt file, see SaveLocations()
     if
         ShroudButton(
-            SCREEN_W - (butt_width * 5),
-            SCREEN_H - (butt_height),
-            butt_width,
-            butt_height,
+            SCREEN_W - (BUTTON_WIDTH * 5),
+            SCREEN_H - (BUTTON_HEIGHT),
+            BUTTON_WIDTH,
+            BUTTON_HEIGHT,
             TransTexture,
             string.format("<size=%d>Save</size>", TableFontSize),
             "Save to file"
@@ -150,25 +181,29 @@ function ShroudOnGUI()
         SaveLocations(MYPOITABLE)
     end
 
+
+    -- Load clears current table and loads one from places.txt, see LoadSavedLocations()
     if
         ShroudButton(
-            SCREEN_W - (butt_width * 6),
-            SCREEN_H - (butt_height),
-            butt_width,
-            butt_height,
+            SCREEN_W - (BUTTON_WIDTH * 6),
+            SCREEN_H - (BUTTON_HEIGHT),
+            BUTTON_WIDTH,
+            BUTTON_HEIGHT,
             TransTexture,
             string.format("<size=%d>Load</size>", TableFontSize),
             "Load from file"
         ) == true
      then
-        LoadSavedLocations()
+        LoadSavedLocations(false)
     end
+
+    -- Clear data table
     if
         ShroudButton(
-            SCREEN_W - (butt_width * 7),
-            SCREEN_H - (butt_height),
-            butt_width,
-            butt_height,
+            SCREEN_W - (BUTTON_WIDTH * 7),
+            SCREEN_H - (BUTTON_HEIGHT),
+            BUTTON_WIDTH,
+            BUTTON_HEIGHT,
             TransTexture,
             string.format("<size=%d>Clear</size>", TableFontSize),
             "Clear table"
@@ -178,77 +213,49 @@ function ShroudOnGUI()
         TRACK = {}
     end
 
-    if #TRACK > 0 then
+    -- Show distance if the track is in the same scene, otherwise show a  red message.
+    if Dist then
+    --if #TRACK > 0 then
         -- ensure the selected track is in the same scene,
-        if TRACK[1][2] == ShroudGetCurrentSceneName() then
-            local dist = Distance()
-            ShroudGUILabel(
-                (SCREEN_W / 2) - 50,
-                (SCREEN_H / 2.1),
-                300,
-                200,
-                string.format("<size=%d><color=#00ff00>%.1f</color></size>", TableFontSize, dist)
-            )
-        else
-            ShroudGUILabel(
-                (SCREEN_W / 2) - 300,
-                (SCREEN_H / 2.1),
-                600,
-                100,
-                string.format(
-                    "<size=%d><color=#ff0000>Tracked placemark is not in this scene</color></size>",
-                    TableFontSize
-                )
-            )
-        end
+        --if TRACK[1][2] == ShroudGetCurrentSceneName() then
+            -- Testing dist calculation on Update instead of GUI.
+            -- Will set to dist to Global and compute on Update, but read it on GUI.
+        ShroudGUILabel(
+            (SCREEN_W / 2) - 50,
+            (SCREEN_H / 2.1),
+            300,
+            200,
+            string.format("<size=%d><color=#00ff00>%.1f</color></size>", TableFontSize, Dist)
+        )
     end
-end
 
-function PrintConsole(tbl)
-    for i, v in pairs(tbl) do
-        ShroudConsoleLog(string.format("T: %s", v[1]))
-        ShroudConsoleLog(string.format("Scene: %s", v[2]))
-        ShroudConsoleLog(string.format("Label: %s", v[3]))
-        ShroudConsoleLog(string.format("X: %s", v[4]))
-        ShroudConsoleLog(string.format("Y: %s", v[5]))
-        ShroudConsoleLog(string.format("Z: %s", v[6]))
+    if Dist_Error then
+        ShroudGUILabel(
+            (SCREEN_W / 2) - 300,
+            (SCREEN_H / 2.1),
+            600,
+            100,
+            string.format(
+                "<size=%d><color=#ff0000>Tracked placemark is not in this scene</color></size>",
+                TableFontSize
+            )
+        )
     end
+
 end
 
-function GrabLocation(label)
-    local scene = ShroudGetCurrentSceneName()
-    local X = ShroudPlayerX
-    local Y = ShroudPlayerY
-    local Z = ShroudPlayerZ
-    -- write new entry into the global table
-    table.insert(MYPOITABLE, {TimeStamp(), scene, label, X, Y, Z, "#ffffff"})
-    ShroudConsoleLog(string.format("Placemark #: %d", #MYPOITABLE))
-    -- return the new line in case we need to do something else with it... such as print
-    return {{TimeStamp(), scene, label, X, Y, Z}}
-end
+function DrawTable() -- Called on the GUI. Be careful what you process here
 
-function SetAssets()
-    ButtonTexture = ShroudLoadTexture("/Placemarker/assets/button.png")
-    BGTexture = ShroudLoadTexture("Placemarker/assets/bg.png")
-    BorderTexture = ShroudLoadTexture("Placemarker/assets/border.png")
-    TransTexture = ShroudLoadTexture("Placemarker/assets/transparent_1x1.png")
-end
+    if SCREEN_H == nil  or SCREEN_W == nil then
+        SetAssets()
+        --ShroudConsoleLog("read screen size on GUI")
+    end
 
-function TimeStamp()
-    return os.date("%m-%d-%Y|%H:%M:%S")
-end
-
-function DrawTable()
-    local x = (SCREEN_W * .66) -- - (width * .5)
-    local y = (SCREEN_H * .15) -- + (height * .5)
-    local smallButtWidth = TableFontSize * 1.5
-    local smallButtHeight = TableFontSize * 1.5
-    local w = SCREEN_W * .33
-    local h = SCREEN_H * .1
+    NumberTablePages = math.ceil(#MYPOITABLE/10)
 
     for i, v in ipairs(MYPOITABLE) do
-        local row = y + (i * Pad)
-        local col = x
+        local row = TableY + (i * Pad)
+        local col = TableX
         -- Record the row Y-coordinate.
         -- I use this table to detect if a click was made close enough to the row
         ROWTABLE[i] = row
@@ -258,8 +265,8 @@ function DrawTable()
                 ShroudButton(
                     col - Pad,
                     row,
-                    smallButtWidth,
-                    smallButtHeight,
+                    SmallButtonWidth,
+                    SmallButtonHeight,
                     TransTexture,
                     string.format("<size=%d>X</size>", TableFontSize),
                     "Delete"
@@ -267,7 +274,7 @@ function DrawTable()
              then
                 for index, buttrow in ipairs(ROWTABLE) do
                     -- find the row the button was near in ROWTABLE - using 10 px
-                    if math.abs((ShroudMouseY - (buttrow + (smallButtHeight / 2)))) < 10 then
+                    if math.abs((ShroudMouseY - (buttrow + (SmallButtonHeight / 2)))) < 10 then
                         ShroudConsoleLog(string.format("Removed %s", MYPOITABLE[index][3]))
                         table.remove(MYPOITABLE, index)
                     end
@@ -277,8 +284,8 @@ function DrawTable()
                 ShroudButton(
                     col - Pad * 2,
                     row,
-                    smallButtWidth,
-                    smallButtHeight,
+                    SmallButtonWidth,
+                    SmallButtonHeight,
                     TransTexture,
                     string.format("<size=%d>T</size>", TableFontSize),
                     "Track"
@@ -287,7 +294,8 @@ function DrawTable()
                 for index, buttrow in ipairs(ROWTABLE) do
                     -- what a shitshow
                     -- find what row the click was near - using 10 px
-                    if math.abs((ShroudMouseY - (buttrow + (smallButtHeight / 2)))) < 10 then
+                    Dist_Error = false -- clear the error
+                    if math.abs((ShroudMouseY - (buttrow + (SmallButtonHeight / 2)))) < 10 then
                         -- if the placemark is already being tracked, then clear it
                         if index == TRACK[2] then
                             -- otherwise assign a new placemark to the track table
@@ -318,8 +326,8 @@ function DrawTable()
                 ShroudButton(
                     col - Pad * 3,
                     row,
-                    smallButtWidth,
-                    smallButtHeight,
+                    SmallButtonWidth,
+                    SmallButtonHeight,
                     TransTexture,
                     string.format("<size=%d>&</size>", TableFontSize),
                     "Append to file"
@@ -327,7 +335,7 @@ function DrawTable()
              then
                 for index, buttrow in ipairs(ROWTABLE) do
                     -- find the row the button was near in ROWTABLE -- Using 10 px
-                    if math.abs((ShroudMouseY - (buttrow + (smallButtHeight / 2)))) < 10 then
+                    if math.abs((ShroudMouseY - (buttrow + (SmallButtonHeight / 2)))) < 10 then
                         --ShroudConsoleLog(string.format("Append placemark %s to file", MYPOITABLE[index][3]))
                         Append(MYPOITABLE[index])
                     end
@@ -339,8 +347,8 @@ function DrawTable()
             ShroudGUILabel(
                 col,
                 row,
-                w,
-                h,
+                TableRowWidth,
+                TableRowHeight,
                 string.format(
                     "<size=%d><color=%s>D:%s Scene: %s Label:%s X:%.1f Y:%.1f Z:%.1f</color></size>",
                     TableFontSize,
@@ -357,6 +365,52 @@ function DrawTable()
     end
 end
 
+function PrintConsole(tbl)
+    for i, v in pairs(tbl) do
+        ShroudConsoleLog(string.format("T: %s", v[1]))
+        ShroudConsoleLog(string.format("Scene: %s", v[2]))
+        ShroudConsoleLog(string.format("Label: %s", v[3]))
+        ShroudConsoleLog(string.format("X: %s", v[4]))
+        ShroudConsoleLog(string.format("Y: %s", v[5]))
+        ShroudConsoleLog(string.format("Z: %s", v[6]))
+    end
+end
+
+function GrabLocation(label)
+    local scene = ShroudGetCurrentSceneName()
+    local X = ShroudPlayerX
+    local Y = ShroudPlayerY
+    local Z = ShroudPlayerZ
+    -- write new entry into the global table
+    table.insert(MYPOITABLE, {TimeStamp(), scene, label, X, Y, Z, "#ffffff"})
+    ShroudConsoleLog(string.format("Placemark #: %d", #MYPOITABLE))
+    -- return the new line in case we need to do something else with it... such as print
+    return {{TimeStamp(), scene, label, X, Y, Z}}
+end
+
+function SetAssets()
+    SCREEN_W = ShroudGetScreenX()
+    SCREEN_H = ShroudGetScreenY()
+    BUTTON_WIDTH = TableFontSize * 5
+    BUTTON_HEIGHT = TableFontSize * 5
+    TableX = SCREEN_W * .66
+    TableY = SCREEN_H * .15
+    SmallButtonWidth = TableFontSize * 1.5
+    SmallButtonHeight = TableFontSize * 1.5
+    TableRowWidth = SCREEN_W * .33
+    TableRowHeight = SCREEN_H * .1
+
+    ButtonTexture = ShroudLoadTexture("/Placemarker/assets/button.png")
+    BGTexture = ShroudLoadTexture("Placemarker/assets/bg.png")
+    BorderTexture = ShroudLoadTexture("Placemarker/assets/border.png")
+    TransTexture = ShroudLoadTexture("Placemarker/assets/transparent_1x1.png")
+end
+
+function TimeStamp()
+    return os.date("%m-%d-%Y|%H:%M:%S")
+end
+
+
 function Distance()
     local pX = ShroudPlayerX
     local pY = ShroudPlayerY
@@ -370,7 +424,18 @@ function Distance()
 end
 
 function SaveLocations(tbl)
-    local file = io.open(DATAPATH .. "\\Placemarker\\data\\places.txt", "w")
+    
+    -- Create a backup if there's an old file. It's just too easy to lose everything by saving over the same file.
+    local filePath = DATAPATH .. "\\Placemarker\\data\\places.txt"
+    local oldFP = DATAPATH .. "\\Placemarker\\data\\places.old"
+    
+    local old = os.remove(oldFP)
+    local backup = os.rename(filePath, oldFP)
+    if backup then
+        ShroudConsoleLog(string.format("[ffd700]Backing up old file[ffffff]"))
+    end
+
+    local file = io.open(filePath, "w")
     for i, v in ipairs(tbl) do
         local line =
             string.format(
@@ -390,7 +455,7 @@ function SaveLocations(tbl)
     --
 end
 
-function LoadSavedLocations()
+function LoadSavedLocations(restore)
     -- clear the table, hope you saved it!
     MYPOITABLE = {}
     local temp = {}
@@ -406,7 +471,13 @@ function LoadSavedLocations()
     }
 
     local filePath = DATAPATH .. "\\Placemarker\\data\\places.txt"
-    local file = io.open(filePath, "rb")
+
+    if restore == true then
+        filePath = DATAPATH .. "\\Placemarker\\data\\places.old"
+        --file = io.open(filePath, "r")
+    end
+
+    local file = io.open(filePath, "r")
     if file then
         file:close()
 
@@ -455,8 +526,9 @@ function Help()
     ShroudConsoleLog(string.format("Type commands in local chat"))
     ShroudConsoleLog(string.format("- - -"))
     ShroudConsoleLog(string.format("Type: <!pmhelp> for list of commands"))
-    ShroudConsoleLog(string.format("Type: <!pmsave> saves placemarks on your screen to a file"))
+    ShroudConsoleLog(string.format("Type: <!pmsave> saves placemarks on your screen to a file and backs up last file"))
     ShroudConsoleLog(string.format("Type: <!pmload> loads placemarks from file"))
+    ShroudConsoleLog(string.format("Type: <!pmrestore> loads last backup"))
     ShroudConsoleLog(string.format("Type: <!mark some label> to manually enter a labelled placemark"))
     ShroudConsoleLog(string.format("Type: </lua unload> to remove the addon"))
     ShroudConsoleLog(string.format("Type: </lua reload> to reload the addon; and resets it"))
