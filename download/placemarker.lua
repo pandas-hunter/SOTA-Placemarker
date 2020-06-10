@@ -23,7 +23,7 @@ function ShroudOnStart()
     Y = 0
     TableFontSize = 20
     Pad = 40
-    TableOn = 1
+    TableOn = 1 -- Toggle table visibility, 1/0
     Viscolor = "#008000"
 
     ShroudConsoleLog(" ")
