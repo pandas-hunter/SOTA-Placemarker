@@ -39,8 +39,9 @@ Typed commands must be entered into the Local chat channel. Keep in mind, local 
 <br />
 <h3>Type commands in local chat</h3>
 "!pmhelp": for list of commands<br />
-"!pmsave": saves placemarks on your screen to a file<br />
+"!pmsave": saves placemarks on your screen to a file, and backs up last file<br />
 "!pmload": loads placemarks from file<br />
+"!pmrestore": loads last backup<br />
 "!mark some label": to manually enter a labelled placemark<br />
 "/lua unload": removes all addons<br />
 "/lua reload": reloads addons<br />
