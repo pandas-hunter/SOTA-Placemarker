@@ -253,8 +253,6 @@ function DrawTable() -- Called on the GUI. Be careful what you process here
         --ShroudConsoleLog("read screen size on GUI")
     end
 
-    NumberTablePages = math.ceil(#MYPOITABLE/10)
-
     for i, v in ipairs(MYPOITABLE) do
         local row = TableY + (i * Pad)
         local col = TableX
