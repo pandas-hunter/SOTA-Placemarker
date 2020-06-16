@@ -6,29 +6,37 @@
 	i.e. it will not work in an IDE. Any functions or globals that begin with "Shroud"
 	are maintained on the SOTA server, and are not visible in a local IDE.
 ]] --
+
+-- %%%%
 function ShroudOnStart()
-    VERSION = "1.0"
+    VERSION = "1.1"
     OPS = "Win10"
     LUA = "Lua 5.1.5"
     DATAPATH = ShroudDataPath .. "\\Portalarium\\Shroud of the Avatar\\Lua"
     CHARACTER = ShroudGetPlayerName()
-    MYPOITABLE = {}
-    ROWTABLE = {}
-    TRACK = {}
+    MYPOITABLE = {} -- stores the entire table of data
+    DISPLAYTABLE = {} -- stores a paginated slice of the data
+    ROWTABLE = {} -- stores the row and index of the table on GUI. Used for correlating clicks to rows
+    TRACK = {} -- stores the placemark that's currently being tracked
+    CURRENT_PAGE = 0 -- stores the current page being viewed on GUI
+    MAX_ENTRIES = 10 -- maxium number of rows to display per page on GUI
+    MAX_PAGES = 0 -- stores the total number of pages needed. Will recalculate after the data has been loaded
+    FIRST_INDEX = 1 -- stores the true start index in relation to MYPOITABLE. E.g. if on page 2, FIRST_INDEX == 11
+    LAST_INDEX = MAX_ENTRIES -- stores the true last index in relation to MYPOITABLE. E.g. if on page 2, LAST_INDEX == 20
+    INDEX = 1
     SCREEN_H = nil
     SCREEN_W = nil
-    
-    BUTTON_HEIGHT = 100
-    BUTTON_HEIGHT = 100
-    Color = "ffffff"
+    TABLEFONTSIZE = 19
+    BUTTON_HEIGHT = TABLEFONTSIZE * 5
+    BUTTON_HEIGHT = TABLEFONTSIZE * 5
+    PAD = TABLEFONTSIZE * 2
+    COLOR = "ffffff"
     X = 0
     Y = 0
-    TableFontSize = 20
-    Pad = 40
-    TableOn = 1 -- Toggles table visibility, 1/0
-    Viscolor = "#008000"
-    Dist = nil
-    
+    TABLEON = 1 -- Toggles table visibility, 1/0
+    VISCOLOR = "#008000"
+    DIST = nil
+
     SetAssets()
     ShroudConsoleLog(" ")
     ShroudConsoleLog(string.format("- - -"))
@@ -50,6 +58,7 @@ function ShroudOnConsoleInput(channel, source, message)
             local _, label_text = string.find(message, "!mark")
             local subString = string.sub(message, label_text + 1)
             GrabLocation(subString)
+            UpdatePages("forward")
             PrintConsole(MYPOITABLE)
         end
         if string.match(message, "!pmsave") then
@@ -60,6 +69,7 @@ function ShroudOnConsoleInput(channel, source, message)
         end
         if string.match(message, "!pmrestore") then
             LoadSavedLocations(true)
+            UpdatePages("forward")
         end
         if string.match(message, "!pmhelp") then
             Help()
@@ -71,16 +81,17 @@ function ShroudOnUpdate()
 
     if #TRACK > 0 then
         if TRACK[1][2] == ShroudGetCurrentSceneName() then
-            Dist = Distance()
+            DIST = Distance()
             Dist_Error = false
         else
             -- user selected a track which was not in the scene
-            Dist = nil
+            DIST = nil
             Dist_Error = true
         end
     else
-        Dist = nil
+        DIST = nil
     end
+
 end
 
 function ShroudOnGUI()
@@ -103,12 +114,17 @@ function DrawMenu() -- Called on the GUI. Be careful what you process here.
             BUTTON_WIDTH,
             BUTTON_HEIGHT,
             TransTexture,
-            string.format("<size=%d>Mark</size>", TableFontSize),
+            string.format("<size=%d>Mark</size>", TABLEFONTSIZE),
             "Mark"
         ) == true
      then
-        ConsoleLog("POI Recorded")
+        if CURRENT_PAGE < 1 then
+            CURRENT_PAGE = 1
+        end
         local newLocation = GrabLocation("NA")
+        --CURRENT_PAGE = MAX_PAGES
+        UpdatePages("mark")
+        ConsoleLog("POI Recorded")
         PrintConsole(newLocation)
     end
 
@@ -120,12 +136,12 @@ function DrawMenu() -- Called on the GUI. Be careful what you process here.
             BUTTON_WIDTH,
             BUTTON_HEIGHT,
             TransTexture,
-            string.format("<size=%d>Size +</size>", TableFontSize),
+            string.format("<size=%d>Size +</size>", TABLEFONTSIZE),
             "Increase"
         ) == true
      then
-        TableFontSize = TableFontSize + 1
-        Pad = TableFontSize * 2.5
+        TABLEFONTSIZE = TABLEFONTSIZE + 1
+        PAD = TABLEFONTSIZE * 2.5
         SetAssets()
     end
 
@@ -137,12 +153,12 @@ function DrawMenu() -- Called on the GUI. Be careful what you process here.
             BUTTON_WIDTH,
             BUTTON_HEIGHT,
             TransTexture,
-            string.format("<size=%d>Size -</size>", TableFontSize),
+            string.format("<size=%d>Size -</size>", TABLEFONTSIZE),
             "Decrease"
         ) == true
      then
-        TableFontSize = TableFontSize - 1
-        Pad = TableFontSize * 2
+        TABLEFONTSIZE = TABLEFONTSIZE - 1
+        PAD = TABLEFONTSIZE * 2
         SetAssets()
     end
 
@@ -154,17 +170,17 @@ function DrawMenu() -- Called on the GUI. Be careful what you process here.
             BUTTON_WIDTH,
             BUTTON_HEIGHT,
             TransTexture,
-            string.format("<size=%d><color=%s>Vis</color></size>", TableFontSize, Viscolor),
+            string.format("<size=%d><color=%s>Vis</color></size>", TABLEFONTSIZE, VISCOLOR),
             "Show/Hide Table"
         ) == true
      then
         -- Toggle
-        TableOn = math.abs(TableOn - 1)
+        TABLEON = math.abs(TABLEON - 1)
 
-        if TableOn == 1 then
-            Viscolor = "#008000"
+        if TABLEON == 1 then
+            VISCOLOR = "#008000"
         else
-            Viscolor = "#b80c2e"
+            VISCOLOR = "#b80c2e"
         end
     end
 
@@ -176,7 +192,7 @@ function DrawMenu() -- Called on the GUI. Be careful what you process here.
             BUTTON_WIDTH,
             BUTTON_HEIGHT,
             TransTexture,
-            string.format("<size=%d>Save</size>", TableFontSize),
+            string.format("<size=%d>Save</size>", TABLEFONTSIZE),
             "Save to file"
         ) == true
      then
@@ -192,11 +208,13 @@ function DrawMenu() -- Called on the GUI. Be careful what you process here.
             BUTTON_WIDTH,
             BUTTON_HEIGHT,
             TransTexture,
-            string.format("<size=%d>Load</size>", TableFontSize),
+            string.format("<size=%d>Load</size>", TABLEFONTSIZE),
             "Load from file"
         ) == true
      then
         LoadSavedLocations(false)
+        --CURRENT_PAGE = 1
+        UpdatePages("forward")
     end
 
     -- Clear data table
@@ -207,27 +225,71 @@ function DrawMenu() -- Called on the GUI. Be careful what you process here.
             BUTTON_WIDTH,
             BUTTON_HEIGHT,
             TransTexture,
-            string.format("<size=%d>Clear</size>", TableFontSize),
+            string.format("<size=%d>Clear</size>", TABLEFONTSIZE),
             "Clear table"
         ) == true
      then
+        DISPLAYTABLE = {}
         MYPOITABLE = {}
         TRACK = {}
+        CURRENT_PAGE = 0
+        MAX_PAGES = 0
+    end
+    -- Next Page Button
+    if
+        ShroudButton(
+            SCREEN_W - (BUTTON_WIDTH * 8),
+            SCREEN_H - (BUTTON_HEIGHT),
+            BUTTON_WIDTH,
+            BUTTON_HEIGHT,
+            TransTexture,
+            string.format("<size=%d>-></size>\n%d/%d", TABLEFONTSIZE-1, CURRENT_PAGE, MAX_PAGES),
+            "Next Page"
+        ) == true
+     then
+        --[[if MAX_PAGES > 0 then
+            CURRENT_PAGE = CURRENT_PAGE + 1
+        else
+            CURRENT_PAGE = 0
+        end
+
+        if CURRENT_PAGE > MAX_PAGES then
+            CURRENT_PAGE = 1
+        end]]--
+        UpdatePages("forward")
+    end
+    -- Last Page Button
+    if
+        ShroudButton(
+            SCREEN_W - (BUTTON_WIDTH * 9),
+            SCREEN_H - (BUTTON_HEIGHT),
+            BUTTON_WIDTH,
+            BUTTON_HEIGHT,
+            TransTexture,
+            string.format("<size=%d><-</size>\n%d/%d", TABLEFONTSIZE-1, CURRENT_PAGE, MAX_PAGES),
+            "Last Page"
+        ) == true
+     then
+        --[[if MAX_PAGES > 0 then
+            CURRENT_PAGE = CURRENT_PAGE - 1
+        else
+            CURRENT_PAGE = 0
+        end
+
+        if CURRENT_PAGE < 1 then
+            CURRENT_PAGE = MAX_PAGES
+        end]]--
+        UpdatePages("back")
     end
 
     -- Show distance if the track is in the same scene, otherwise show a  red message.
-    if Dist then
-    --if #TRACK > 0 then
-        -- ensure the selected track is in the same scene,
-        --if TRACK[1][2] == ShroudGetCurrentSceneName() then
-            -- Testing dist calculation on Update instead of GUI.
-            -- Will set to dist to Global and compute on Update, but read it on GUI.
+    if DIST then
         ShroudGUILabel(
             (SCREEN_W / 2) - 50,
             (SCREEN_H / 2.1),
             300,
             200,
-            string.format("<size=%d><color=#00ff00>%.1f</color></size>", TableFontSize, Dist)
+            string.format("<size=%d><color=#00ff00>%.1f</color></size>", TABLEFONTSIZE, DIST)
         )
     end
 
@@ -239,7 +301,7 @@ function DrawMenu() -- Called on the GUI. Be careful what you process here.
             100,
             string.format(
                 "<size=%d><color=#ff0000>Tracked placemark is not in this scene</color></size>",
-                TableFontSize
+                TABLEFONTSIZE
             )
         )
     end
@@ -253,62 +315,92 @@ function DrawTable() -- Called on the GUI. Be careful what you process here
         --ShroudConsoleLog("read screen size on GUI")
     end
 
-    for i, v in ipairs(MYPOITABLE) do
-        local row = TableY + (i * Pad)
-        local col = TableX
-        -- Record the row Y-coordinate.
-        -- I use this table to detect if a click was made close enough to the row
-        ROWTABLE[i] = row
-        -- The buttons
-        if TableOn == 1 then
+    -- WORKING HERE.
+    if TABLEON == 1 then
+        for i, v in ipairs(DISPLAYTABLE) do
+            local row = TableY + (i * PAD)
+            local col = TableX
+            -- Record the row Y-coordinate.
+            -- I use this table to detect if a click was made close enough to the row
+            ROWTABLE[i] = row
+            -- The buttons
+
+            ShroudGUILabel(
+                col,
+                row,
+                TableRowWidth,
+                TableRowHeight,
+                string.format(
+                    "<size=%d><color=%s>D:%s Scene: %s Label:%s X:%.1f Y:%.1f Z:%.1f</color></size>",
+                    TABLEFONTSIZE,
+                    v[7],
+                    v[1],
+                    v[2],
+                    v[3],
+                    v[4],
+                    v[5],
+                    v[6]
+                )
+            )
+            -- Delete a row
             if
                 ShroudButton(
-                    col - Pad,
+                    col - PAD,
                     row,
                     SmallButtonWidth,
                     SmallButtonHeight,
                     TransTexture,
-                    string.format("<size=%d>X</size>", TableFontSize),
+                    string.format("<size=%d>X</size>", TABLEFONTSIZE),
                     "Delete"
                 ) == true
-             then
+                then
                 for index, buttrow in ipairs(ROWTABLE) do
+                    -- Compute the INDEX for the MYPOITABLE from the current page
+                    -- and row of the DISPLAYTABLE which only shows MAX_ENTRIES (10)  at a time
+                    INDEX = index + (MAX_ENTRIES * (CURRENT_PAGE - 1))
                     -- find the row the button was near in ROWTABLE - using 10 px
                     if math.abs((ShroudMouseY - (buttrow + (SmallButtonHeight / 2)))) < 10 then
-                        ShroudConsoleLog(string.format("Removed %s", MYPOITABLE[index][3]))
-                        table.remove(MYPOITABLE, index)
+                        ShroudConsoleLog(string.format("Removed %s", MYPOITABLE[INDEX][3]))
+                        table.remove(MYPOITABLE, INDEX)
+                        UpdatePages("null")
+                        if CURRENT_PAGE > MAX_PAGES then
+                            CURRENT_PAGE = MAX_PAGES
+                        end
+                        UpdatePages("delete")
                     end
                 end
             end
             if
                 ShroudButton(
-                    col - Pad * 2,
+                    col - PAD * 2,
                     row,
                     SmallButtonWidth,
                     SmallButtonHeight,
                     TransTexture,
-                    string.format("<size=%d>T</size>", TableFontSize),
+                    string.format("<size=%d>T</size>", TABLEFONTSIZE),
                     "Track"
                 ) == true
-             then
+                then
                 for index, buttrow in ipairs(ROWTABLE) do
-                    -- what a shitshow
+                    -- Compute the INDEX for the MYPOITABLE from the current page
+                    -- and row of the DISPLAYTABLE which only shows MAX_ENTRIES (10)  at a time
+                    INDEX = index + (MAX_ENTRIES * (CURRENT_PAGE - 1))
                     -- find what row the click was near - using 10 px
                     Dist_Error = false -- clear the error
                     if math.abs((ShroudMouseY - (buttrow + (SmallButtonHeight / 2)))) < 10 then
                         -- if the placemark is already being tracked, then clear it
-                        if index == TRACK[2] then
+                        if INDEX == TRACK[2] then
                             -- otherwise assign a new placemark to the track table
                             TRACK = {}
-                            MYPOITABLE[index][7] = "#ffffff"
+                            MYPOITABLE[INDEX][7] = "#ffffff"
                         elseif TRACK[2] then
                             MYPOITABLE[TRACK[2]][7] = "#ffffff"
                             TRACK = {}
                         else
-                            TRACK[1] = MYPOITABLE[index]
-                            TRACK[2] = index
+                            TRACK[1] = MYPOITABLE[INDEX]
+                            TRACK[2] = INDEX
                             -- set new flaged row to gold
-                            MYPOITABLE[index][7] = "#ffd700"
+                            MYPOITABLE[INDEX][7] = "#ffd700"
                             ShroudConsoleLog(
                                 string.format(
                                     "Tracking: %s, %.1f, %.1f, %.1f",
@@ -324,43 +416,26 @@ function DrawTable() -- Called on the GUI. Be careful what you process here
             end
             if
                 ShroudButton(
-                    col - Pad * 3,
+                    col - PAD * 3,
                     row,
                     SmallButtonWidth,
                     SmallButtonHeight,
                     TransTexture,
-                    string.format("<size=%d>&</size>", TableFontSize),
+                    string.format("<size=%d>&</size>", TABLEFONTSIZE),
                     "Append to file"
                 ) == true
-             then
+                then
                 for index, buttrow in ipairs(ROWTABLE) do
+                    -- Compute the INDEX for the MYPOITABLE from the current page
+                    -- and row of the DISPLAYTABLE which only shows MAX_ENTRIES (10)  at a time
+                    INDEX = index + (MAX_ENTRIES * (CURRENT_PAGE - 1))
                     -- find the row the button was near in ROWTABLE -- Using 10 px
                     if math.abs((ShroudMouseY - (buttrow + (SmallButtonHeight / 2)))) < 10 then
                         --ShroudConsoleLog(string.format("Append placemark %s to file", MYPOITABLE[index][3]))
-                        Append(MYPOITABLE[index])
+                        Append(MYPOITABLE[INDEX])
                     end
                 end
             end
-        end
-        -- Global TableOn is toggled by the Vis button in the GUI
-        if TableOn == 1 then
-            ShroudGUILabel(
-                col,
-                row,
-                TableRowWidth,
-                TableRowHeight,
-                string.format(
-                    "<size=%d><color=%s>D:%s Scene: %s Label:%s X:%.1f Y:%.1f Z:%.1f</color></size>",
-                    TableFontSize,
-                    v[7],
-                    v[1],
-                    v[2],
-                    v[3],
-                    v[4],
-                    v[5],
-                    v[6]
-                )
-            )
         end
     end
 end
@@ -391,12 +466,12 @@ end
 function SetAssets()
     SCREEN_W = ShroudGetScreenX()
     SCREEN_H = ShroudGetScreenY()
-    BUTTON_WIDTH = TableFontSize * 5
-    BUTTON_HEIGHT = TableFontSize * 5
+    BUTTON_WIDTH = TABLEFONTSIZE * 5
+    BUTTON_HEIGHT = TABLEFONTSIZE * 5
     TableX = SCREEN_W * .66
     TableY = SCREEN_H * .15
-    SmallButtonWidth = TableFontSize * 1.5
-    SmallButtonHeight = TableFontSize * 1.5
+    SmallButtonWidth = TABLEFONTSIZE * 1.5
+    SmallButtonHeight = TABLEFONTSIZE * 1.5
     TableRowWidth = SCREEN_W * .33
     TableRowHeight = SCREEN_H * .1
 
@@ -406,10 +481,49 @@ function SetAssets()
     TransTexture = ShroudLoadTexture("Placemarker/assets/transparent_1x1.png")
 end
 
+function UpdatePages(direction)
+    MAX_PAGES = math.ceil(#MYPOITABLE/10)
+    if (direction == "forward") and (MAX_PAGES > 0) then
+        if (CURRENT_PAGE >= MAX_PAGES) then
+            CURRENT_PAGE = 1
+        elseif CURRENT_PAGE <  MAX_PAGES then
+            CURRENT_PAGE = CURRENT_PAGE + 1
+        else
+            CURRENT_PAGE = CURRENT_PAGE
+        end
+    end
+    if direction == "back" then
+        if CURRENT_PAGE <= 1 then
+            CURRENT_PAGE = MAX_PAGES
+        else
+            CURRENT_PAGE = CURRENT_PAGE - 1
+        end
+    end
+
+    if direction == "delete" then
+        if CURRENT_PAGE > MAX_PAGES then
+            CURRENT_PAGE = MAX_PAGES
+        end
+    end
+
+    if direction == "mark" then
+        CURRENT_PAGE = MAX_PAGES
+    end
+
+    if CURRENT_PAGE <= MAX_PAGES then
+        FIRST_INDEX = (10 * (CURRENT_PAGE - 1)) + 1
+        LAST_INDEX = 10 * CURRENT_PAGE
+    end
+
+    DISPLAYTABLE = SliceTable(MYPOITABLE, FIRST_INDEX, LAST_INDEX)
+    --ShroudConsoleLog(string.format("cpage = %d, mpage = %d, findex = %d, lindex = %d",CURRENT_PAGE, MAX_PAGES, FIRST_INDEX, LAST_INDEX))
+
+
+end
+
 function TimeStamp()
     return os.date("%m-%d-%Y|%H:%M:%S")
 end
-
 
 function Distance()
     local pX = ShroudPlayerX
@@ -424,11 +538,11 @@ function Distance()
 end
 
 function SaveLocations(tbl)
-    
+
     -- Create a backup if there's an old file. It's just too easy to lose everything by saving over the same file.
     local filePath = DATAPATH .. "\\Placemarker\\data\\places.txt"
     local oldFP = DATAPATH .. "\\Placemarker\\data\\places.old"
-    
+
     local old = os.remove(oldFP)
     local backup = os.rename(filePath, oldFP)
     if backup then
@@ -494,6 +608,7 @@ function LoadSavedLocations(restore)
             rowNumber = rowNumber + 1
         end
         ShroudConsoleLog(string.format("[ffd700]Loaded %s places[ffffff]", #MYPOITABLE))
+        
     else
         ShroudConsoleLog(string.format "[ff0000]Could not find places.txt[ffffff]")
     end
@@ -519,6 +634,16 @@ function Append(row)
     file:close()
     ShroudConsoleLog(string.format("[ffd700]Appended %s to your file[ffffff]", row[3]))
 end
+
+function SliceTable(tbl, first, last, step)
+    local sliced = {}
+
+    for i = first or 1, last or #tbl, step or 1 do
+      sliced[#sliced+1] = tbl[i]
+    end
+
+    return sliced
+  end
 
 function Help()
     ShroudConsoleLog(" ")
