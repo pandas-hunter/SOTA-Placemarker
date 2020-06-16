@@ -9,7 +9,7 @@
 
 -- %%%%
 function ShroudOnStart()
-    VERSION = "1.0"
+    VERSION = "1.1"
     OPS = "Win10"
     LUA = "Lua 5.1.5"
     DATAPATH = ShroudDataPath .. "\\Portalarium\\Shroud of the Avatar\\Lua"
@@ -26,7 +26,7 @@ function ShroudOnStart()
     INDEX = 1
     SCREEN_H = nil
     SCREEN_W = nil
-    TABLEFONTSIZE = 17
+    TABLEFONTSIZE = 19
     BUTTON_HEIGHT = TABLEFONTSIZE * 5
     BUTTON_HEIGHT = TABLEFONTSIZE * 5
     PAD = TABLEFONTSIZE * 2
@@ -58,6 +58,7 @@ function ShroudOnConsoleInput(channel, source, message)
             local _, label_text = string.find(message, "!mark")
             local subString = string.sub(message, label_text + 1)
             GrabLocation(subString)
+            UpdatePages("forward")
             PrintConsole(MYPOITABLE)
         end
         if string.match(message, "!pmsave") then
@@ -68,6 +69,7 @@ function ShroudOnConsoleInput(channel, source, message)
         end
         if string.match(message, "!pmrestore") then
             LoadSavedLocations(true)
+            UpdatePages("forward")
         end
         if string.match(message, "!pmhelp") then
             Help()
@@ -120,9 +122,8 @@ function DrawMenu() -- Called on the GUI. Be careful what you process here.
             CURRENT_PAGE = 1
         end
         local newLocation = GrabLocation("NA")
-        UpdatePages()
-        CURRENT_PAGE = MAX_PAGES
-        -- sometimes you need to force it to redraw.
+        --CURRENT_PAGE = MAX_PAGES
+        UpdatePages("mark")
         ConsoleLog("POI Recorded")
         PrintConsole(newLocation)
     end
@@ -212,8 +213,8 @@ function DrawMenu() -- Called on the GUI. Be careful what you process here.
         ) == true
      then
         LoadSavedLocations(false)
-        CURRENT_PAGE = 1
-        UpdatePages()
+        --CURRENT_PAGE = 1
+        UpdatePages("forward")
     end
 
     -- Clear data table
@@ -246,7 +247,7 @@ function DrawMenu() -- Called on the GUI. Be careful what you process here.
             "Next Page"
         ) == true
      then
-        if MAX_PAGES > 0 then
+        --[[if MAX_PAGES > 0 then
             CURRENT_PAGE = CURRENT_PAGE + 1
         else
             CURRENT_PAGE = 0
@@ -254,8 +255,8 @@ function DrawMenu() -- Called on the GUI. Be careful what you process here.
 
         if CURRENT_PAGE > MAX_PAGES then
             CURRENT_PAGE = 1
-        end
-        UpdatePages()
+        end]]--
+        UpdatePages("forward")
     end
     -- Last Page Button
     if
@@ -266,10 +267,10 @@ function DrawMenu() -- Called on the GUI. Be careful what you process here.
             BUTTON_HEIGHT,
             TransTexture,
             string.format("<size=%d><-</size>\n%d/%d", TABLEFONTSIZE-1, CURRENT_PAGE, MAX_PAGES),
-            "Next Page"
+            "Last Page"
         ) == true
      then
-        if MAX_PAGES > 0 then
+        --[[if MAX_PAGES > 0 then
             CURRENT_PAGE = CURRENT_PAGE - 1
         else
             CURRENT_PAGE = 0
@@ -277,8 +278,8 @@ function DrawMenu() -- Called on the GUI. Be careful what you process here.
 
         if CURRENT_PAGE < 1 then
             CURRENT_PAGE = MAX_PAGES
-        end
-        UpdatePages()
+        end]]--
+        UpdatePages("back")
     end
 
     -- Show distance if the track is in the same scene, otherwise show a  red message.
@@ -361,11 +362,11 @@ function DrawTable() -- Called on the GUI. Be careful what you process here
                     if math.abs((ShroudMouseY - (buttrow + (SmallButtonHeight / 2)))) < 10 then
                         ShroudConsoleLog(string.format("Removed %s", MYPOITABLE[INDEX][3]))
                         table.remove(MYPOITABLE, INDEX)
-                        UpdatePages()
+                        UpdatePages("null")
                         if CURRENT_PAGE > MAX_PAGES then
                             CURRENT_PAGE = MAX_PAGES
                         end
-                        UpdatePages()
+                        UpdatePages("delete")
                     end
                 end
             end
@@ -480,8 +481,35 @@ function SetAssets()
     TransTexture = ShroudLoadTexture("Placemarker/assets/transparent_1x1.png")
 end
 
-function UpdatePages()
+function UpdatePages(direction)
     MAX_PAGES = math.ceil(#MYPOITABLE/10)
+    if (direction == "forward") and (MAX_PAGES > 0) then
+        if (CURRENT_PAGE >= MAX_PAGES) then
+            CURRENT_PAGE = 1
+        elseif CURRENT_PAGE <  MAX_PAGES then
+            CURRENT_PAGE = CURRENT_PAGE + 1
+        else
+            CURRENT_PAGE = CURRENT_PAGE
+        end
+    end
+    if direction == "back" then
+        if CURRENT_PAGE <= 1 then
+            CURRENT_PAGE = MAX_PAGES
+        else
+            CURRENT_PAGE = CURRENT_PAGE - 1
+        end
+    end
+
+    if direction == "delete" then
+        if CURRENT_PAGE > MAX_PAGES then
+            CURRENT_PAGE = MAX_PAGES
+        end
+    end
+
+    if direction == "mark" then
+        CURRENT_PAGE = MAX_PAGES
+    end
+
     if CURRENT_PAGE <= MAX_PAGES then
         FIRST_INDEX = (10 * (CURRENT_PAGE - 1)) + 1
         LAST_INDEX = 10 * CURRENT_PAGE
@@ -580,6 +608,7 @@ function LoadSavedLocations(restore)
             rowNumber = rowNumber + 1
         end
         ShroudConsoleLog(string.format("[ffd700]Loaded %s places[ffffff]", #MYPOITABLE))
+        
     else
         ShroudConsoleLog(string.format "[ff0000]Could not find places.txt[ffffff]")
     end
